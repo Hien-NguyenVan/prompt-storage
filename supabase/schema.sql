@@ -11,7 +11,7 @@ create table if not exists public.profiles (
   id uuid primary key references auth.users(id) on delete cascade,
   email text not null unique,
   full_name text,
-  role text not null check (role in ('admin','staff')) default 'staff',
+  role text not null check (role in ('admin','staff','viewer')) default 'staff',
   created_at timestamptz not null default now()
 );
 
@@ -97,10 +97,16 @@ language sql stable security definer set search_path = public as $$
   select exists(select 1 from public.profiles where id = auth.uid() and role = 'admin');
 $$;
 
+-- helper: can_see_all() — admin hoặc viewer
+create or replace function public.can_see_all() returns boolean
+language sql stable security definer set search_path = public as $$
+  select exists(select 1 from public.profiles where id = auth.uid() and role in ('admin','viewer'));
+$$;
+
 -- ---- profiles ----
 drop policy if exists p_profiles_select on public.profiles;
 create policy p_profiles_select on public.profiles for select
-  using (id = auth.uid() or public.is_admin());
+  using (id = auth.uid() or public.can_see_all());
 
 drop policy if exists p_profiles_update_self on public.profiles;
 create policy p_profiles_update_self on public.profiles for update
@@ -109,7 +115,7 @@ create policy p_profiles_update_self on public.profiles for update
 -- ---- prompt_sets ----
 drop policy if exists p_sets_select on public.prompt_sets;
 create policy p_sets_select on public.prompt_sets for select
-  using (created_by = auth.uid() or public.is_admin());
+  using (created_by = auth.uid() or public.can_see_all());
 
 drop policy if exists p_sets_insert on public.prompt_sets;
 create policy p_sets_insert on public.prompt_sets for insert
@@ -125,41 +131,59 @@ create policy p_sets_delete on public.prompt_sets for delete
 
 -- ---- image_refs ----
 drop policy if exists p_refs_all on public.image_refs;
-create policy p_refs_all on public.image_refs for all
+drop policy if exists p_refs_select on public.image_refs;
+drop policy if exists p_refs_write on public.image_refs;
+create policy p_refs_select on public.image_refs for select
+  using (exists (select 1 from public.prompt_sets s where s.id = set_id and (s.created_by = auth.uid() or public.can_see_all())));
+create policy p_refs_write on public.image_refs for all
   using (exists (select 1 from public.prompt_sets s where s.id = set_id and (s.created_by = auth.uid() or public.is_admin())))
   with check (exists (select 1 from public.prompt_sets s where s.id = set_id and (s.created_by = auth.uid() or public.is_admin())));
 
 -- ---- sub_videos ----
 drop policy if exists p_sub_all on public.sub_videos;
-create policy p_sub_all on public.sub_videos for all
+drop policy if exists p_sub_select on public.sub_videos;
+drop policy if exists p_sub_write on public.sub_videos;
+create policy p_sub_select on public.sub_videos for select
+  using (exists (select 1 from public.prompt_sets s where s.id = set_id and (s.created_by = auth.uid() or public.can_see_all())));
+create policy p_sub_write on public.sub_videos for all
   using (exists (select 1 from public.prompt_sets s where s.id = set_id and (s.created_by = auth.uid() or public.is_admin())))
   with check (exists (select 1 from public.prompt_sets s where s.id = set_id and (s.created_by = auth.uid() or public.is_admin())));
 
 -- ---- sub_video_image_refs ----
 drop policy if exists p_svir_all on public.sub_video_image_refs;
-create policy p_svir_all on public.sub_video_image_refs for all
+drop policy if exists p_svir_select on public.sub_video_image_refs;
+drop policy if exists p_svir_write on public.sub_video_image_refs;
+create policy p_svir_select on public.sub_video_image_refs for select
   using (exists (
-    select 1 from public.sub_videos sv
-    join public.prompt_sets s on s.id = sv.set_id
+    select 1 from public.sub_videos sv join public.prompt_sets s on s.id = sv.set_id
+    where sv.id = sub_video_id and (s.created_by = auth.uid() or public.can_see_all())
+  ));
+create policy p_svir_write on public.sub_video_image_refs for all
+  using (exists (
+    select 1 from public.sub_videos sv join public.prompt_sets s on s.id = sv.set_id
     where sv.id = sub_video_id and (s.created_by = auth.uid() or public.is_admin())
   ))
   with check (exists (
-    select 1 from public.sub_videos sv
-    join public.prompt_sets s on s.id = sv.set_id
+    select 1 from public.sub_videos sv join public.prompt_sets s on s.id = sv.set_id
     where sv.id = sub_video_id and (s.created_by = auth.uid() or public.is_admin())
   ));
 
 -- ---- sub_video_frame_refs ----
 drop policy if exists p_svfr_all on public.sub_video_frame_refs;
-create policy p_svfr_all on public.sub_video_frame_refs for all
+drop policy if exists p_svfr_select on public.sub_video_frame_refs;
+drop policy if exists p_svfr_write on public.sub_video_frame_refs;
+create policy p_svfr_select on public.sub_video_frame_refs for select
   using (exists (
-    select 1 from public.sub_videos sv
-    join public.prompt_sets s on s.id = sv.set_id
+    select 1 from public.sub_videos sv join public.prompt_sets s on s.id = sv.set_id
+    where sv.id = sub_video_id and (s.created_by = auth.uid() or public.can_see_all())
+  ));
+create policy p_svfr_write on public.sub_video_frame_refs for all
+  using (exists (
+    select 1 from public.sub_videos sv join public.prompt_sets s on s.id = sv.set_id
     where sv.id = sub_video_id and (s.created_by = auth.uid() or public.is_admin())
   ))
   with check (exists (
-    select 1 from public.sub_videos sv
-    join public.prompt_sets s on s.id = sv.set_id
+    select 1 from public.sub_videos sv join public.prompt_sets s on s.id = sv.set_id
     where sv.id = sub_video_id and (s.created_by = auth.uid() or public.is_admin())
   ));
 

@@ -19,7 +19,8 @@ export async function createStaffUser(formData: FormData) {
   const email = String(formData.get("email") ?? "").trim();
   const password = String(formData.get("password") ?? "");
   const full_name = String(formData.get("full_name") ?? "").trim();
-  const role = (String(formData.get("role") ?? "staff") === "admin" ? "admin" : "staff") as "admin" | "staff";
+  const roleRaw = String(formData.get("role") ?? "staff");
+  const role = (["admin", "viewer", "staff"].includes(roleRaw) ? roleRaw : "staff") as "admin" | "viewer" | "staff";
 
   if (!email || !password) return { error: "Vui lòng nhập email và mật khẩu" };
   if (password.length < 6) return { error: "Mật khẩu tối thiểu 6 ký tự" };

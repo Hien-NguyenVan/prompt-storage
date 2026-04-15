@@ -1,11 +1,16 @@
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import PromptSetForm from "@/components/PromptSetForm";
 
 export default async function EditSetPage({ params }: { params: { id: string } }) {
   const supabase = createClient();
+  const { data: { session } } = await supabase.auth.getSession();
+  const user = session!.user;
+  const { data: me } = await supabase.from("profiles").select("role").eq("id", user.id).single();
   const { data: set } = await supabase.from("prompt_sets").select("*").eq("id", params.id).single();
   if (!set) notFound();
+  const canEdit = set.created_by === user.id || me?.role === "admin";
+  if (!canEdit) redirect(`/sets/${params.id}`);
 
   const { data: refs } = await supabase
     .from("image_refs").select("*").eq("set_id", params.id).order("order_index");

@@ -63,6 +63,7 @@ export default function UsersPanel({ users, currentUserId }: { users: U[]; curre
             <label className="text-xs text-slate-500">Vai trò</label>
             <select name="role" defaultValue="staff" className="w-full border rounded px-2 py-1.5 text-sm">
               <option value="staff">Nhân viên</option>
+              <option value="viewer">Xem tất cả</option>
               <option value="admin">Admin</option>
             </select>
           </div>
@@ -92,8 +93,12 @@ export default function UsersPanel({ users, currentUserId }: { users: U[]; curre
                 <td className="px-4 py-2">{u.email}</td>
                 <td className="px-4 py-2">{u.full_name || "-"}</td>
                 <td className="px-4 py-2">
-                  <span className={`text-xs px-2 py-0.5 rounded-full ${u.role === "admin" ? "bg-purple-100 text-purple-700" : "bg-slate-100 text-slate-700"}`}>
-                    {u.role === "admin" ? "Admin" : "Nhân viên"}
+                  <span className={`text-xs px-2 py-0.5 rounded-full ${
+                    u.role === "admin" ? "bg-purple-100 text-purple-700" :
+                    u.role === "viewer" ? "bg-teal-100 text-teal-700" :
+                    "bg-slate-100 text-slate-700"
+                  }`}>
+                    {u.role === "admin" ? "Admin" : u.role === "viewer" ? "Xem tất cả" : "Nhân viên"}
                   </span>
                 </td>
                 <td className="px-4 py-2 text-slate-600">{u.created_at_display}</td>

@@ -22,8 +22,11 @@ export default async function SetDetailPage({ params }: { params: { id: string }
       .eq("set_id", params.id).order("order_index"),
   ]);
   const isAdmin = meRes.data?.role === "admin";
+  const canSeeAll = meRes.data?.role === "admin" || meRes.data?.role === "viewer";
   const set = setRes.data;
   if (!set) notFound();
+  const isOwner = set.created_by === user.id;
+  const canEdit = isOwner || isAdmin;
   const refs = refsRes.data;
   const subs = subsRes.data;
 
@@ -40,12 +43,12 @@ export default async function SetDetailPage({ params }: { params: { id: string }
             <span>Loại: <b>{loai}</b></span>
             <span>Model: <b>{set.model}</b></span>
             <span>Số video: <b>{subs?.length ?? 0}</b></span>
-            {isAdmin && <span>Người tạo: <b>{(set as any).profiles?.full_name || (set as any).profiles?.email}</b></span>}
+            {canSeeAll && <span>Người tạo: <b>{(set as any).profiles?.full_name || (set as any).profiles?.email}</b></span>}
             <span>Tạo: {formatDate(set.created_at)}</span>
           </div>
         </div>
         <div className="flex gap-2">
-          <Link href={`/sets/${set.id}/edit`} className="text-sm px-3 py-1.5 border rounded hover:bg-slate-50">Sửa</Link>
+          {canEdit && <Link href={`/sets/${set.id}/edit`} className="text-sm px-3 py-1.5 border rounded hover:bg-slate-50">Sửa</Link>}
           {isAdmin && <DeleteSetButton id={set.id} />}
         </div>
       </div>

@@ -20,6 +20,7 @@ export default async function HomePage({ searchParams }: { searchParams: SearchP
   const user = session!.user;
   const { data: me } = await supabase.from("profiles").select("role").eq("id", user.id).single();
   const isAdmin = me?.role === "admin";
+  const canSeeAll = me?.role === "admin" || me?.role === "viewer";
 
   let query = supabase
     .from("prompt_sets")
@@ -28,7 +29,7 @@ export default async function HomePage({ searchParams }: { searchParams: SearchP
 
   if (searchParams.q) query = query.ilike("name", `%${searchParams.q}%`);
   if (searchParams.model) query = query.eq("model", searchParams.model);
-  if (searchParams.creator && isAdmin) query = query.eq("created_by", searchParams.creator);
+  if (searchParams.creator && canSeeAll) query = query.eq("created_by", searchParams.creator);
   if (searchParams.from) query = query.gte("created_at", searchParams.from);
   if (searchParams.to) query = query.lte("created_at", new Date(searchParams.to + "T23:59:59").toISOString());
   if (searchParams.sort === "name_asc") query = supabase
@@ -42,7 +43,7 @@ export default async function HomePage({ searchParams }: { searchParams: SearchP
   if (searchParams.type === "don") filtered = filtered.filter((s) => (s.sub_videos?.[0]?.count ?? 0) <= 1);
   if (searchParams.type === "ghep") filtered = filtered.filter((s) => (s.sub_videos?.[0]?.count ?? 0) >= 2);
 
-  const { data: allStaff } = isAdmin
+  const { data: allStaff } = canSeeAll
     ? await supabase.from("profiles").select("id, email, full_name").order("email")
     : { data: null };
 
@@ -56,7 +57,7 @@ export default async function HomePage({ searchParams }: { searchParams: SearchP
       </div>
 
       <FiltersBar
-        isAdmin={isAdmin}
+        isAdmin={canSeeAll}
         models={AI_MODELS as unknown as string[]}
         staff={allStaff ?? []}
         initial={searchParams}
@@ -72,7 +73,7 @@ export default async function HomePage({ searchParams }: { searchParams: SearchP
               <th className="px-4 py-2 font-medium">Loại</th>
               <th className="px-4 py-2 font-medium">Model</th>
               <th className="px-4 py-2 font-medium">Số video</th>
-              {isAdmin && <th className="px-4 py-2 font-medium">Người tạo</th>}
+              {canSeeAll && <th className="px-4 py-2 font-medium">Người tạo</th>}
               <th className="px-4 py-2 font-medium">Ngày tạo</th>
             </tr>
           </thead>
@@ -90,13 +91,13 @@ export default async function HomePage({ searchParams }: { searchParams: SearchP
                   </td>
                   <td className="px-4 py-2">{s.model}</td>
                   <td className="px-4 py-2">{count}</td>
-                  {isAdmin && <td className="px-4 py-2 text-slate-600">{s.profiles?.full_name || s.profiles?.email}</td>}
+                  {canSeeAll && <td className="px-4 py-2 text-slate-600">{s.profiles?.full_name || s.profiles?.email}</td>}
                   <td className="px-4 py-2 text-slate-600">{formatDate(s.created_at)}</td>
                 </tr>
               );
             })}
             {filtered.length === 0 && (
-              <tr><td colSpan={isAdmin ? 6 : 5} className="px-4 py-8 text-center text-slate-500">Chưa có bộ prompt nào</td></tr>
+              <tr><td colSpan={canSeeAll ? 6 : 5} className="px-4 py-8 text-center text-slate-500">Chưa có bộ prompt nào</td></tr>
             )}
           </tbody>
         </table>
