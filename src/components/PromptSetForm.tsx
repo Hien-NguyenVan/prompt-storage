@@ -164,7 +164,10 @@ export default function PromptSetForm({ initial }: { initial?: Initial }) {
           <button type="button" onClick={() => addImageRef()} className="text-sm px-3 py-1.5 border rounded-md hover:bg-slate-50">+ Thêm ảnh</button>
         </div>
         {imageRefs.length === 0 ? (
-          <p className="text-sm text-slate-400 italic">Chưa có ảnh tham chiếu.</p>
+          <button type="button" onClick={() => addImageRef()}
+            className="w-full border-2 border-dashed rounded-md py-6 text-sm text-slate-500 hover:bg-slate-50 hover:text-brand-700 hover:border-brand-500">
+            + Thêm ảnh tham chiếu đầu tiên
+          </button>
         ) : (
           <div className="space-y-2">
             {imageRefs.map((r, i) => (
@@ -180,6 +183,10 @@ export default function PromptSetForm({ initial }: { initial?: Initial }) {
                   className="w-full border rounded px-2 py-1 text-sm bg-white font-mono" />
               </div>
             ))}
+            <button type="button" onClick={() => addImageRef()}
+              className="w-full border-2 border-dashed rounded-md py-2.5 text-sm text-slate-500 hover:bg-slate-50 hover:text-brand-700 hover:border-brand-500">
+              + Thêm ảnh tham chiếu
+            </button>
           </div>
         )}
       </section>
@@ -295,6 +302,11 @@ export default function PromptSetForm({ initial }: { initial?: Initial }) {
             )}
           </div>
         ))}
+
+        <button type="button" onClick={addSubVideo}
+          className="w-full border-2 border-dashed rounded-lg py-3 text-sm text-slate-500 hover:bg-slate-50 hover:text-brand-700 hover:border-brand-500">
+          + Thêm video
+        </button>
       </section>
 
       {err && <div className="bg-red-50 border border-red-200 text-red-700 text-sm p-3 rounded">{err}</div>}
