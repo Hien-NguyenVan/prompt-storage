@@ -1,8 +1,18 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
-import { formatDate } from "@/lib/utils";
+import { formatTime, vnDateKey, formatDateHeading } from "@/lib/utils";
 import { AI_MODELS } from "@/lib/constants";
 import FiltersBar from "@/components/FiltersBar";
+
+function groupByDate(items: any[]): { dateKey: string; items: any[] }[] {
+  const map = new Map<string, any[]>();
+  for (const it of items) {
+    const key = vnDateKey(it.created_at);
+    if (!map.has(key)) map.set(key, []);
+    map.get(key)!.push(it);
+  }
+  return Array.from(map.entries()).map(([dateKey, items]) => ({ dateKey, items }));
+}
 
 type SearchParams = {
   q?: string;
@@ -49,10 +59,10 @@ export default async function HomePage({ searchParams }: { searchParams: SearchP
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-semibold">Danh sách bộ prompt</h1>
-        <Link href="/sets/new" className="bg-brand-600 hover:bg-brand-700 text-white text-sm px-4 py-2 rounded-md">
-          + Tạo bộ mới
+      <div className="flex items-center justify-between gap-2">
+        <h1 className="text-xl sm:text-2xl font-semibold truncate">Danh sách bộ prompt</h1>
+        <Link href="/sets/new" className="bg-brand-600 hover:bg-brand-700 text-white text-sm px-3 py-2 rounded-md whitespace-nowrap shrink-0">
+          + Tạo bộ
         </Link>
       </div>
 
@@ -65,43 +75,44 @@ export default async function HomePage({ searchParams }: { searchParams: SearchP
 
       {error && <p className="text-red-600 text-sm">Lỗi: {error.message}</p>}
 
-      <div className="bg-white rounded-xl border overflow-hidden">
-        <table className="w-full text-sm">
-          <thead className="bg-slate-50 text-left">
-            <tr>
-              <th className="px-4 py-2 font-medium">Tên bộ</th>
-              <th className="px-4 py-2 font-medium">Loại</th>
-              <th className="px-4 py-2 font-medium">Model</th>
-              <th className="px-4 py-2 font-medium">Số video</th>
-              {canSeeAll && <th className="px-4 py-2 font-medium">Người tạo</th>}
-              <th className="px-4 py-2 font-medium">Ngày tạo</th>
-            </tr>
-          </thead>
-          <tbody>
-            {filtered.map((s) => {
-              const count = s.sub_videos?.[0]?.count ?? 0;
-              const loai = count <= 1 ? "Đơn" : "Ghép";
-              return (
-                <tr key={s.id} className="border-t hover:bg-slate-50">
-                  <td className="px-4 py-2">
-                    <Link href={`/sets/${s.id}`} className="text-brand-700 hover:underline font-medium">{s.name}</Link>
-                  </td>
-                  <td className="px-4 py-2">
-                    <span className={`text-xs px-2 py-0.5 rounded-full ${loai === "Đơn" ? "bg-sky-100 text-sky-700" : "bg-amber-100 text-amber-700"}`}>{loai}</span>
-                  </td>
-                  <td className="px-4 py-2">{s.model}</td>
-                  <td className="px-4 py-2">{count}</td>
-                  {canSeeAll && <td className="px-4 py-2 text-slate-600">{s.profiles?.full_name || s.profiles?.email}</td>}
-                  <td className="px-4 py-2 text-slate-600">{formatDate(s.created_at)}</td>
-                </tr>
-              );
-            })}
-            {filtered.length === 0 && (
-              <tr><td colSpan={canSeeAll ? 6 : 5} className="px-4 py-8 text-center text-slate-500">Chưa có bộ prompt nào</td></tr>
-            )}
-          </tbody>
-        </table>
-      </div>
+      {filtered.length === 0 ? (
+        <div className="bg-white border rounded-xl py-12 text-center text-slate-500 text-sm">Chưa có bộ prompt nào</div>
+      ) : (
+        <div className="space-y-6">
+          {groupByDate(filtered).map(({ dateKey, items }) => (
+            <div key={dateKey} className="space-y-2">
+              <div className="flex items-center gap-3">
+                <h2 className="text-sm font-semibold text-slate-600">{formatDateHeading(dateKey)}</h2>
+                <div className="flex-1 h-px bg-slate-200" />
+                <span className="text-xs text-slate-400">{items.length} bộ</span>
+              </div>
+              <div className="space-y-2">
+                {items.map((s: any) => {
+                  const count = s.sub_videos?.[0]?.count ?? 0;
+                  const loai = count <= 1 ? "Đơn" : "Ghép";
+                  return (
+                    <Link key={s.id} href={`/sets/${s.id}`}
+                      className="block bg-white border rounded-xl p-3 hover:border-brand-500 hover:shadow-sm transition">
+                      <div className="flex items-start gap-3">
+                        <div className="flex-1 min-w-0">
+                          <div className="font-medium text-brand-700 truncate">{s.name}</div>
+                          <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-slate-500 mt-1">
+                            <span className={`px-2 py-0.5 rounded-full text-[11px] ${loai === "Đơn" ? "bg-sky-100 text-sky-700" : "bg-amber-100 text-amber-700"}`}>{loai}</span>
+                            <span>{s.model}</span>
+                            <span>{count} video</span>
+                            {canSeeAll && <span className="truncate">· {s.profiles?.full_name || s.profiles?.email}</span>}
+                          </div>
+                        </div>
+                        <div className="text-xs text-slate-400 whitespace-nowrap">{formatTime(s.created_at)}</div>
+                      </div>
+                    </Link>
+                  );
+                })}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

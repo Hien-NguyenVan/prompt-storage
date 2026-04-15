@@ -23,21 +23,23 @@ export default async function AppLayout({ children }: { children: React.ReactNod
     <div className="min-h-screen">
       <NavProgress />
       <header className="bg-white border-b sticky top-0 z-10">
-        <div className="max-w-6xl mx-auto px-4 py-3 flex items-center gap-6">
-          <Link href="/" className="font-semibold text-brand-700">Kho Prompt</Link>
-          <nav className="flex-1 flex items-center gap-4 text-sm">
-            <Link href="/" className="hover:text-brand-600">Danh sách</Link>
-            <Link href="/sets/new" className="hover:text-brand-600">Tạo bộ mới</Link>
-            {isAdmin && <Link href="/admin/users" className="hover:text-brand-600">Quản lý nhân viên</Link>}
+        <div className="max-w-6xl mx-auto px-3 sm:px-4 py-2.5 flex items-center gap-2 sm:gap-4">
+          <Link href="/" className="font-semibold text-brand-700 shrink-0">Kho Prompt</Link>
+          <nav className="flex-1 flex items-center gap-2 sm:gap-4 text-sm overflow-x-auto scrollbar-hide">
+            <Link href="/" className="hover:text-brand-600 shrink-0">Danh sách</Link>
+            <Link href="/sets/new" className="hover:text-brand-600 shrink-0">Tạo bộ</Link>
+            {isAdmin && <Link href="/admin/users" className="hover:text-brand-600 shrink-0">Nhân viên</Link>}
           </nav>
-          <div className="text-sm text-slate-600 flex items-center gap-3">
-            <span>{profile?.full_name || profile?.email}{isAdmin && " (Admin)"}</span>
+          <div className="text-sm text-slate-600 flex items-center gap-2 shrink-0">
+            <span className="hidden md:inline max-w-[160px] truncate">
+              {profile?.full_name || profile?.email}{isAdmin && " (Admin)"}
+            </span>
             <ThemeToggle />
             <LogoutButton />
           </div>
         </div>
       </header>
-      <main className="max-w-6xl mx-auto px-4 py-6">{children}</main>
+      <main className="max-w-6xl mx-auto px-3 sm:px-4 py-4 sm:py-6">{children}</main>
     </div>
   );
 }
