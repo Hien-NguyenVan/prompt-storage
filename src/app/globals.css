@@ -35,3 +35,13 @@ html.dark body { @apply bg-slate-950 text-slate-100; }
 .dark input, .dark select, .dark textarea {
   @apply bg-slate-800 border-slate-700 text-slate-100 placeholder:text-slate-500;
 }
+
+/* Prevent iOS Safari from giving date inputs an oversized intrinsic min-width */
+input[type="date"] {
+  min-width: 0 !important;
+  max-width: 100%;
+  box-sizing: border-box;
+  -webkit-appearance: none;
+  appearance: none;
+}
+input[type="date"]::-webkit-date-and-time-value { text-align: left; }
