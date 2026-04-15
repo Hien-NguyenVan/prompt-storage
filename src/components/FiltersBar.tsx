@@ -89,11 +89,23 @@ export default function FiltersBar({
           )}
           <div className="flex flex-col w-full sm:w-auto">
             <label className="text-xs text-slate-500">Từ ngày</label>
-            <input type="date" value={from} onChange={(e) => setFrom(e.target.value)} className="w-full min-w-0 box-border border rounded-md px-2 py-1.5 text-sm" />
+            <div className="relative">
+              <input type="date" value={from} onChange={(e) => setFrom(e.target.value)} className="w-full min-w-0 box-border border rounded-md px-2 py-1.5 pr-7 text-sm" />
+              {from && (
+                <button type="button" onClick={() => setFrom("")} aria-label="Xóa ngày"
+                  className="absolute right-1.5 top-1/2 -translate-y-1/2 w-5 h-5 flex items-center justify-center rounded-full text-slate-400 hover:text-red-600 hover:bg-slate-100 text-sm leading-none">×</button>
+              )}
+            </div>
           </div>
           <div className="flex flex-col w-full sm:w-auto">
             <label className="text-xs text-slate-500">Đến ngày</label>
-            <input type="date" value={to} onChange={(e) => setTo(e.target.value)} className="w-full border rounded-md px-2 py-1.5 text-sm" />
+            <div className="relative">
+              <input type="date" value={to} onChange={(e) => setTo(e.target.value)} className="w-full min-w-0 box-border border rounded-md px-2 py-1.5 pr-7 text-sm" />
+              {to && (
+                <button type="button" onClick={() => setTo("")} aria-label="Xóa ngày"
+                  className="absolute right-1.5 top-1/2 -translate-y-1/2 w-5 h-5 flex items-center justify-center rounded-full text-slate-400 hover:text-red-600 hover:bg-slate-100 text-sm leading-none">×</button>
+              )}
+            </div>
           </div>
           <div className="flex flex-col w-full sm:w-auto">
             <label className="text-xs text-slate-500">Sắp xếp</label>
