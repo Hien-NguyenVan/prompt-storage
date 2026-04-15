@@ -89,7 +89,7 @@ export default function FiltersBar({
           )}
           <div className="flex flex-col w-full sm:w-auto">
             <label className="text-xs text-slate-500">Từ ngày</label>
-            <input type="date" value={from} onChange={(e) => setFrom(e.target.value)} className="w-full border rounded-md px-2 py-1.5 text-sm" />
+            <input type="date" value={from} onChange={(e) => setFrom(e.target.value)} className="w-full min-w-0 box-border border rounded-md px-2 py-1.5 text-sm" />
           </div>
           <div className="flex flex-col w-full sm:w-auto">
             <label className="text-xs text-slate-500">Đến ngày</label>
