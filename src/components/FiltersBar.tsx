@@ -54,16 +54,16 @@ export default function FiltersBar({
           placeholder="Tìm theo tên..." className="flex-1 border rounded-md px-3 py-1.5 text-sm" />
         <button onClick={() => setOpen((v) => !v)} type="button"
           className="sm:hidden text-sm px-3 py-1.5 border rounded-md hover:bg-slate-50 flex items-center gap-1">
-          Lọc
+          {open ? "Ẩn" : "Bộ lọc"}
           {activeCount > 0 && <span className="bg-brand-600 text-white text-[10px] rounded-full px-1.5 py-0.5">{activeCount}</span>}
         </button>
-        <button onClick={apply} className="bg-brand-600 hover:bg-brand-700 text-white text-sm px-3 py-1.5 rounded-md">Lọc</button>
+        <button onClick={apply} className="bg-brand-600 hover:bg-brand-700 text-white text-sm px-3 py-1.5 rounded-md">Tìm</button>
       </div>
 
       {/* Các filter chi tiết: luôn hiện ở sm+, toggle ở mobile */}
       <div className={`${open ? "block" : "hidden"} sm:block border-t px-3 pb-3 pt-2`}>
-        <div className="grid grid-cols-2 sm:flex sm:flex-wrap gap-2 items-end">
-          <div>
+        <div className="flex flex-col sm:flex-row sm:flex-wrap gap-2 sm:items-end">
+          <div className="flex flex-col w-full sm:w-auto">
             <label className="text-xs text-slate-500">Loại</label>
             <select value={type} onChange={(e) => setType(e.target.value)} className="w-full border rounded-md px-2 py-1.5 text-sm">
               <option value="">Tất cả</option>
@@ -71,7 +71,7 @@ export default function FiltersBar({
               <option value="ghep">Ghép</option>
             </select>
           </div>
-          <div>
+          <div className="flex flex-col w-full sm:w-auto">
             <label className="text-xs text-slate-500">Model</label>
             <select value={model} onChange={(e) => setModel(e.target.value)} className="w-full border rounded-md px-2 py-1.5 text-sm">
               <option value="">Tất cả</option>
@@ -79,7 +79,7 @@ export default function FiltersBar({
             </select>
           </div>
           {isAdmin && (
-            <div className="col-span-2 sm:col-auto">
+            <div className="flex flex-col w-full sm:w-auto">
               <label className="text-xs text-slate-500">Người tạo</label>
               <select value={creator} onChange={(e) => setCreator(e.target.value)} className="w-full border rounded-md px-2 py-1.5 text-sm">
                 <option value="">Tất cả</option>
@@ -87,15 +87,15 @@ export default function FiltersBar({
               </select>
             </div>
           )}
-          <div>
+          <div className="flex flex-col w-full sm:w-auto">
             <label className="text-xs text-slate-500">Từ ngày</label>
             <input type="date" value={from} onChange={(e) => setFrom(e.target.value)} className="w-full border rounded-md px-2 py-1.5 text-sm" />
           </div>
-          <div>
+          <div className="flex flex-col w-full sm:w-auto">
             <label className="text-xs text-slate-500">Đến ngày</label>
             <input type="date" value={to} onChange={(e) => setTo(e.target.value)} className="w-full border rounded-md px-2 py-1.5 text-sm" />
           </div>
-          <div>
+          <div className="flex flex-col w-full sm:w-auto">
             <label className="text-xs text-slate-500">Sắp xếp</label>
             <select value={sort} onChange={(e) => setSort(e.target.value)} className="w-full border rounded-md px-2 py-1.5 text-sm">
               <option value="desc">Mới nhất</option>
@@ -103,7 +103,7 @@ export default function FiltersBar({
               <option value="name_asc">Tên A-Z</option>
             </select>
           </div>
-          <div className="col-span-2 sm:col-auto flex gap-2">
+          <div className="flex gap-2 w-full sm:w-auto">
             <button onClick={apply} className="flex-1 sm:flex-none bg-brand-600 hover:bg-brand-700 text-white text-sm px-3 py-1.5 rounded-md">Áp dụng</button>
             <button onClick={reset} className="flex-1 sm:flex-none text-sm px-3 py-1.5 border rounded-md hover:bg-slate-50">Xóa</button>
           </div>
