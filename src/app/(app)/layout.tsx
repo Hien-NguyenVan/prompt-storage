@@ -3,11 +3,13 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import LogoutButton from "@/components/LogoutButton";
 import ThemeToggle from "@/components/ThemeToggle";
+import NavProgress from "@/components/NavProgress";
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
   const supabase = createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) redirect("/login");
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session) redirect("/login");
+  const user = session.user;
 
   const { data: profile } = await supabase
     .from("profiles")
@@ -19,6 +21,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
 
   return (
     <div className="min-h-screen">
+      <NavProgress />
       <header className="bg-white border-b sticky top-0 z-10">
         <div className="max-w-6xl mx-auto px-4 py-3 flex items-center gap-6">
           <Link href="/" className="font-semibold text-brand-700">Kho Prompt</Link>

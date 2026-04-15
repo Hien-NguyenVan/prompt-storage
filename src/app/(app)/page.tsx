@@ -16,8 +16,9 @@ type SearchParams = {
 
 export default async function HomePage({ searchParams }: { searchParams: SearchParams }) {
   const supabase = createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  const { data: me } = await supabase.from("profiles").select("role").eq("id", user!.id).single();
+  const { data: { session } } = await supabase.auth.getSession();
+  const user = session!.user;
+  const { data: me } = await supabase.from("profiles").select("role").eq("id", user.id).single();
   const isAdmin = me?.role === "admin";
 
   let query = supabase

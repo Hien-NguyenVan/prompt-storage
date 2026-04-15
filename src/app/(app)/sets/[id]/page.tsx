@@ -7,28 +7,25 @@ import DeleteSetButton from "@/components/DeleteSetButton";
 
 export default async function SetDetailPage({ params }: { params: { id: string } }) {
   const supabase = createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  const { data: me } = await supabase.from("profiles").select("role").eq("id", user!.id).single();
-  const isAdmin = me?.role === "admin";
+  const { data: { session } } = await supabase.auth.getSession();
+  const user = session!.user;
 
-  const { data: set } = await supabase
-    .from("prompt_sets")
-    .select("id, name, model, created_at, updated_at, created_by, profiles:created_by(email, full_name)")
-    .eq("id", params.id)
-    .single();
+  // Parallelize all queries
+  const [meRes, setRes, refsRes, subsRes] = await Promise.all([
+    supabase.from("profiles").select("role").eq("id", user.id).single(),
+    supabase.from("prompt_sets")
+      .select("id, name, model, created_at, updated_at, created_by, profiles:created_by(email, full_name)")
+      .eq("id", params.id).single(),
+    supabase.from("image_refs").select("*").eq("set_id", params.id).order("order_index"),
+    supabase.from("sub_videos")
+      .select("*, sub_video_image_refs(image_ref_id), sub_video_frame_refs(*)")
+      .eq("set_id", params.id).order("order_index"),
+  ]);
+  const isAdmin = meRes.data?.role === "admin";
+  const set = setRes.data;
   if (!set) notFound();
-
-  const { data: refs } = await supabase
-    .from("image_refs")
-    .select("*")
-    .eq("set_id", params.id)
-    .order("order_index");
-
-  const { data: subs } = await supabase
-    .from("sub_videos")
-    .select("*, sub_video_image_refs(image_ref_id), sub_video_frame_refs(*)")
-    .eq("set_id", params.id)
-    .order("order_index");
+  const refs = refsRes.data;
+  const subs = subsRes.data;
 
   const refMap = new Map((refs ?? []).map((r, i) => [r.id, { ...r, display: i + 1 }]));
   const loai = (subs?.length ?? 0) <= 1 ? "Đơn" : "Ghép";
