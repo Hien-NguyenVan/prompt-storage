@@ -1,12 +1,14 @@
 "use client";
 import { useState, useTransition } from "react";
 import { createStaffUser, deleteStaffUser, resetStaffPassword, updateStaffRole } from "@/app/actions/users";
+import VisibilityConfig from "./VisibilityConfig";
 
-type U = { id: string; email: string; full_name: string | null; role: string; created_at: string; created_at_display: string };
+type U = { id: string; email: string; full_name: string | null; role: string; created_at: string; created_at_display: string; auto_see_new_users?: boolean };
 
 export default function UsersPanel({ users, currentUserId }: { users: U[]; currentUserId: string }) {
   const [msg, setMsg] = useState<{ type: "ok" | "err"; text: string } | null>(null);
   const [pending, start] = useTransition();
+  const [configUserId, setConfigUserId] = useState<string | null>(null);
 
   async function onCreate(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -28,7 +30,10 @@ export default function UsersPanel({ users, currentUserId }: { users: U[]; curre
     start(async () => {
       const res = await deleteStaffUser(u.id);
       if ("error" in res) setMsg({ type: "err", text: res.error as string });
-      else setMsg({ type: "ok", text: "Đã xóa" });
+      else {
+        setMsg({ type: "ok", text: "Đã xóa" });
+        if (configUserId === u.id) setConfigUserId(null);
+      }
     });
   }
 
@@ -42,34 +47,49 @@ export default function UsersPanel({ users, currentUserId }: { users: U[]; curre
     });
   }
 
+  const configUser = configUserId ? users.find((u) => u.id === configUserId) : null;
+  const allUsersSimple = users.map((u) => ({ id: u.id, email: u.email, full_name: u.full_name }));
+
   return (
     <div className="space-y-4">
       <section className="bg-white border rounded-xl p-4 space-y-3">
         <h2 className="font-semibold">Tạo tài khoản mới</h2>
-        <form onSubmit={onCreate} className="grid grid-cols-1 md:grid-cols-5 gap-2 items-end">
-          <div>
-            <label className="text-xs text-slate-500">Email</label>
-            <input name="email" type="email" required className="w-full border rounded px-2 py-1.5 text-sm" />
+        <form onSubmit={onCreate} className="space-y-3">
+          <div className="grid grid-cols-1 md:grid-cols-5 gap-2 items-end">
+            <div>
+              <label className="text-xs text-slate-500">Email</label>
+              <input name="email" type="email" required className="w-full border rounded px-2 py-1.5 text-sm" />
+            </div>
+            <div>
+              <label className="text-xs text-slate-500">Họ tên</label>
+              <input name="full_name" className="w-full border rounded px-2 py-1.5 text-sm" />
+            </div>
+            <div>
+              <label className="text-xs text-slate-500">Mật khẩu</label>
+              <input name="password" required minLength={6} className="w-full border rounded px-2 py-1.5 text-sm" />
+            </div>
+            <div>
+              <label className="text-xs text-slate-500">Vai trò</label>
+              <select name="role" defaultValue="staff" className="w-full border rounded px-2 py-1.5 text-sm">
+                <option value="staff">Nhân viên</option>
+                <option value="viewer">Xem tất cả</option>
+                <option value="admin">Admin</option>
+              </select>
+            </div>
+            <button disabled={pending} className="bg-brand-600 hover:bg-brand-700 text-white text-sm rounded-md py-2 disabled:opacity-60">
+              {pending ? "Đang tạo..." : "Tạo"}
+            </button>
           </div>
-          <div>
-            <label className="text-xs text-slate-500">Họ tên</label>
-            <input name="full_name" className="w-full border rounded px-2 py-1.5 text-sm" />
+          <div className="flex flex-col sm:flex-row gap-3 text-sm">
+            <label className="flex items-center gap-2 select-none">
+              <input name="see_all_existing" type="checkbox" value="true" />
+              Người này thấy prompt của tất cả hiện tại
+            </label>
+            <label className="flex items-center gap-2 select-none">
+              <input name="visible_to_all" type="checkbox" value="true" />
+              Tất cả hiện tại thấy prompt của người này
+            </label>
           </div>
-          <div>
-            <label className="text-xs text-slate-500">Mật khẩu</label>
-            <input name="password" required minLength={6} className="w-full border rounded px-2 py-1.5 text-sm" />
-          </div>
-          <div>
-            <label className="text-xs text-slate-500">Vai trò</label>
-            <select name="role" defaultValue="staff" className="w-full border rounded px-2 py-1.5 text-sm">
-              <option value="staff">Nhân viên</option>
-              <option value="viewer">Xem tất cả</option>
-              <option value="admin">Admin</option>
-            </select>
-          </div>
-          <button disabled={pending} className="bg-brand-600 hover:bg-brand-700 text-white text-sm rounded-md py-2 disabled:opacity-60">
-            {pending ? "Đang tạo..." : "Tạo"}
-          </button>
         </form>
         {msg && (
           <p className={`text-sm ${msg.type === "ok" ? "text-green-700" : "text-red-700"}`}>{msg.text}</p>
@@ -89,7 +109,7 @@ export default function UsersPanel({ users, currentUserId }: { users: U[]; curre
           </thead>
           <tbody>
             {users.map((u) => (
-              <tr key={u.id} className="border-t">
+              <tr key={u.id} className={`border-t ${configUserId === u.id ? "bg-brand-50" : ""}`}>
                 <td className="px-4 py-2">{u.email}</td>
                 <td className="px-4 py-2">{u.full_name || "-"}</td>
                 <td className="px-4 py-2">
@@ -117,6 +137,10 @@ export default function UsersPanel({ users, currentUserId }: { users: U[]; curre
                 </td>
                 <td className="px-4 py-2 text-slate-600">{u.created_at_display}</td>
                 <td className="px-4 py-2 text-right space-x-2">
+                  <button onClick={() => setConfigUserId(configUserId === u.id ? null : u.id)}
+                    className={`text-xs px-2 py-1 border rounded ${configUserId === u.id ? "bg-brand-600 text-white border-brand-600" : "hover:bg-slate-50"}`}>
+                    Quyền xem
+                  </button>
                   <button onClick={() => onReset(u)} className="text-xs px-2 py-1 border rounded hover:bg-slate-50">Đổi MK</button>
                   {u.id !== currentUserId && (
                     <button onClick={() => onDelete(u)} className="text-xs px-2 py-1 border border-red-300 text-red-700 rounded hover:bg-red-50">Xóa</button>
@@ -127,6 +151,18 @@ export default function UsersPanel({ users, currentUserId }: { users: U[]; curre
           </tbody>
         </table>
       </section>
+
+      {configUser && (
+        <section className="bg-white border rounded-xl p-4">
+          <VisibilityConfig
+            key={configUser.id}
+            user={{ id: configUser.id, email: configUser.email, full_name: configUser.full_name }}
+            allUsers={allUsersSimple}
+            autoSee={configUser.auto_see_new_users ?? false}
+            onMsg={setMsg}
+          />
+        </section>
+      )}
     </div>
   );
 }

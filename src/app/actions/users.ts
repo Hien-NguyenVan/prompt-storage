@@ -21,6 +21,8 @@ export async function createStaffUser(formData: FormData) {
   const full_name = String(formData.get("full_name") ?? "").trim();
   const roleRaw = String(formData.get("role") ?? "staff");
   const role = (["admin", "viewer", "staff"].includes(roleRaw) ? roleRaw : "staff") as "admin" | "viewer" | "staff";
+  const seeAllExisting = formData.get("see_all_existing") === "true";
+  const visibleToAll = formData.get("visible_to_all") === "true";
 
   if (!email || !password) return { error: "Vui lòng nhập email và mật khẩu" };
   if (password.length < 6) return { error: "Mật khẩu tối thiểu 6 ký tự" };
@@ -30,7 +32,7 @@ export async function createStaffUser(formData: FormData) {
     email,
     password,
     email_confirm: true,
-    user_metadata: { full_name, role },
+    user_metadata: { full_name, role, see_all_existing: seeAllExisting, visible_to_all: visibleToAll },
   });
   if (error) return { error: error.message };
 

@@ -12,13 +12,13 @@ export default async function AdminUsersPage() {
 
   const { data: users } = await supabase
     .from("profiles")
-    .select("id, email, full_name, role, created_at")
+    .select("id, email, full_name, role, created_at, auto_see_new_users")
     .order("created_at", { ascending: false });
 
   return (
     <div className="space-y-4">
       <h1 className="text-2xl font-semibold">Quản lý nhân viên</h1>
-      <UsersPanel users={(users ?? []).map((u) => ({ ...u, created_at_display: formatDate(u.created_at) }))} currentUserId={user!.id} />
+      <UsersPanel users={(users ?? []).map((u) => ({ ...u, created_at_display: formatDate(u.created_at), auto_see_new_users: u.auto_see_new_users ?? false }))} currentUserId={user!.id} />
     </div>
   );
 }
