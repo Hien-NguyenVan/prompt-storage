@@ -26,12 +26,6 @@ type SearchParams = {
 
 export default async function HomePage({ searchParams }: { searchParams: SearchParams }) {
   const supabase = createClient();
-  const { data: { session } } = await supabase.auth.getSession();
-  const user = session!.user;
-  const { data: me } = await supabase.from("profiles").select("role").eq("id", user.id).single();
-  const isAdmin = me?.role === "admin";
-  const canSeeAll = me?.role === "admin" || me?.role === "viewer";
-
   let query = supabase
     .from("prompt_sets")
     .select("id, name, model, created_at, created_by, profiles:created_by(email, full_name), sub_videos(count)")
@@ -39,7 +33,7 @@ export default async function HomePage({ searchParams }: { searchParams: SearchP
 
   if (searchParams.q) query = query.ilike("name", `%${searchParams.q}%`);
   if (searchParams.model) query = query.eq("model", searchParams.model);
-  if (searchParams.creator && canSeeAll) query = query.eq("created_by", searchParams.creator);
+  if (searchParams.creator) query = query.eq("created_by", searchParams.creator);
   if (searchParams.from) query = query.gte("created_at", searchParams.from);
   if (searchParams.to) query = query.lte("created_at", new Date(searchParams.to + "T23:59:59").toISOString());
   if (searchParams.sort === "name_asc") query = supabase
@@ -53,9 +47,8 @@ export default async function HomePage({ searchParams }: { searchParams: SearchP
   if (searchParams.type === "don") filtered = filtered.filter((s) => (s.sub_videos?.[0]?.count ?? 0) <= 1);
   if (searchParams.type === "ghep") filtered = filtered.filter((s) => (s.sub_videos?.[0]?.count ?? 0) >= 2);
 
-  const { data: allStaff } = canSeeAll
-    ? await supabase.from("profiles").select("id, email, full_name").order("email")
-    : { data: null };
+  // Always fetch staff list for creator filter — RLS already limits what each user can see
+  const { data: allStaff } = await supabase.from("profiles").select("id, email, full_name").order("email");
 
   return (
     <div className="space-y-4">
@@ -67,7 +60,7 @@ export default async function HomePage({ searchParams }: { searchParams: SearchP
       </div>
 
       <FiltersBar
-        isAdmin={canSeeAll}
+        isAdmin={true}
         models={AI_MODELS as unknown as string[]}
         staff={allStaff ?? []}
         initial={searchParams}
@@ -100,7 +93,7 @@ export default async function HomePage({ searchParams }: { searchParams: SearchP
                             <span className={`px-2 py-0.5 rounded-full text-[11px] ${loai === "Đơn" ? "bg-sky-100 text-sky-700" : "bg-amber-100 text-amber-700"}`}>{loai}</span>
                             <span>{s.model}</span>
                             <span>{count} video</span>
-                            {canSeeAll && <span className="truncate">· {s.profiles?.full_name || s.profiles?.email}</span>}
+                            <span className="truncate">· {s.profiles?.full_name || s.profiles?.email}</span>
                           </div>
                         </div>
                         <div className="text-xs text-slate-400 whitespace-nowrap">{formatTime(s.created_at)}</div>

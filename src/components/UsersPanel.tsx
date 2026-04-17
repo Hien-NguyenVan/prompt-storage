@@ -72,7 +72,6 @@ export default function UsersPanel({ users, currentUserId }: { users: U[]; curre
               <label className="text-xs text-slate-500">Vai trò</label>
               <select name="role" defaultValue="staff" className="w-full border rounded px-2 py-1.5 text-sm">
                 <option value="staff">Nhân viên</option>
-                <option value="viewer">Xem tất cả</option>
                 <option value="admin">Admin</option>
               </select>
             </div>
@@ -118,7 +117,7 @@ export default function UsersPanel({ users, currentUserId }: { users: U[]; curre
                     onChange={(e) => {
                       const newRole = e.target.value;
                       if (newRole === u.role) return;
-                      if (!confirm(`Đổi vai trò của ${u.email} thành "${newRole === "admin" ? "Admin" : newRole === "viewer" ? "Xem tất cả" : "Nhân viên"}"?`)) return;
+                      if (!confirm(`Đổi vai trò của ${u.email} thành "${newRole === "admin" ? "Admin" : "Nhân viên"}"?`)) return;
                       start(async () => {
                         const res = await updateStaffRole(u.id, newRole);
                         if ("error" in res) setMsg({ type: "err", text: res.error as string });
@@ -127,11 +126,9 @@ export default function UsersPanel({ users, currentUserId }: { users: U[]; curre
                     }}
                     className={`text-xs px-2 py-1 rounded border bg-white disabled:opacity-60 ${
                       u.role === "admin" ? "text-purple-700 border-purple-200" :
-                      u.role === "viewer" ? "text-teal-700 border-teal-200" :
                       "text-slate-700 border-slate-200"
                     }`}>
                     <option value="staff">Nhân viên</option>
-                    <option value="viewer">Xem tất cả</option>
                     <option value="admin">Admin</option>
                   </select>
                 </td>

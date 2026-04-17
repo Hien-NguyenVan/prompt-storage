@@ -22,7 +22,6 @@ export default async function SetDetailPage({ params }: { params: { id: string }
       .eq("set_id", params.id).order("order_index"),
   ]);
   const isAdmin = meRes.data?.role === "admin";
-  const canSeeAll = meRes.data?.role === "admin" || meRes.data?.role === "viewer";
   const set = setRes.data;
   if (!set) notFound();
   const isOwner = set.created_by === user.id;
@@ -43,7 +42,7 @@ export default async function SetDetailPage({ params }: { params: { id: string }
             <span>Loại: <b>{loai}</b></span>
             <span>Model: <b>{set.model}</b></span>
             <span>Số video: <b>{subs?.length ?? 0}</b></span>
-            {canSeeAll && <span>Người tạo: <b>{(set as any).profiles?.full_name || (set as any).profiles?.email}</b></span>}
+            <span>Người tạo: <b>{(set as any).profiles?.full_name || (set as any).profiles?.email}</b></span>
             <span>Tạo: {formatDate(set.created_at)}</span>
           </div>
         </div>

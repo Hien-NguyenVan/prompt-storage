@@ -11,7 +11,7 @@ create table if not exists public.profiles (
   id uuid primary key references auth.users(id) on delete cascade,
   email text not null unique,
   full_name text,
-  role text not null check (role in ('admin','staff','viewer')) default 'staff',
+  role text not null check (role in ('admin','staff')) default 'staff',
   created_at timestamptz not null default now()
 );
 
@@ -97,10 +97,10 @@ language sql stable security definer set search_path = public as $$
   select exists(select 1 from public.profiles where id = auth.uid() and role = 'admin');
 $$;
 
--- helper: can_see_all() — admin hoặc viewer
+-- helper: can_see_all() — admin only
 create or replace function public.can_see_all() returns boolean
 language sql stable security definer set search_path = public as $$
-  select exists(select 1 from public.profiles where id = auth.uid() and role in ('admin','viewer'));
+  select exists(select 1 from public.profiles where id = auth.uid() and role = 'admin');
 $$;
 
 -- ---- profiles ----

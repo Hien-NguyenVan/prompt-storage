@@ -20,7 +20,7 @@ export async function createStaffUser(formData: FormData) {
   const password = String(formData.get("password") ?? "");
   const full_name = String(formData.get("full_name") ?? "").trim();
   const roleRaw = String(formData.get("role") ?? "staff");
-  const role = (["admin", "viewer", "staff"].includes(roleRaw) ? roleRaw : "staff") as "admin" | "viewer" | "staff";
+  const role = (["admin", "staff"].includes(roleRaw) ? roleRaw : "staff") as "admin" | "staff";
   const seeAllExisting = formData.get("see_all_existing") === "true";
   const visibleToAll = formData.get("visible_to_all") === "true";
 
@@ -56,7 +56,7 @@ export async function deleteStaffUser(id: string) {
 export async function updateStaffRole(id: string, role: string) {
   const check = await assertAdmin();
   if ("error" in check) return check;
-  if (!["admin", "viewer", "staff"].includes(role)) return { error: "Vai trò không hợp lệ" };
+  if (!["admin", "staff"].includes(role)) return { error: "Vai trò không hợp lệ" };
 
   const supabase = createClient();
   const { data: { user } } = await supabase.auth.getUser();
