@@ -1,4 +1,4 @@
-export const AI_MODELS = ["Veo 3.1", "Seedance 2.0", "Kling 3.0"] as const;
+export const AI_MODELS = ["Seedance 2.0", "Veo 3.1", "Kling 3.0"] as const;
 export type AIModel = (typeof AI_MODELS)[number];
 
 export const VIDEO_TYPES = [

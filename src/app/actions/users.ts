@@ -51,6 +51,27 @@ export async function deleteStaffUser(id: string) {
   return { ok: true };
 }
 
+export async function updateStaffRole(id: string, role: string) {
+  const check = await assertAdmin();
+  if ("error" in check) return check;
+  if (!["admin", "viewer", "staff"].includes(role)) return { error: "Vai trò không hợp lệ" };
+
+  const supabase = createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (user && user.id === id && role !== "admin") {
+    return { error: "Không thể hạ quyền tài khoản của chính bạn" };
+  }
+
+  const admin = createAdminClient();
+  const { error: pErr } = await admin.from("profiles").update({ role }).eq("id", id);
+  if (pErr) return { error: pErr.message };
+  // cập nhật user_metadata để trigger sync luôn
+  await admin.auth.admin.updateUserById(id, { user_metadata: { role } });
+
+  revalidatePath("/admin/users");
+  return { ok: true };
+}
+
 export async function resetStaffPassword(id: string, password: string) {
   const check = await assertAdmin();
   if ("error" in check) return check;

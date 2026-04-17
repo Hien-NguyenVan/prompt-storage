@@ -1,6 +1,6 @@
 "use client";
 import { useState, useTransition } from "react";
-import { createStaffUser, deleteStaffUser, resetStaffPassword } from "@/app/actions/users";
+import { createStaffUser, deleteStaffUser, resetStaffPassword, updateStaffRole } from "@/app/actions/users";
 
 type U = { id: string; email: string; full_name: string | null; role: string; created_at: string; created_at_display: string };
 
@@ -93,13 +93,27 @@ export default function UsersPanel({ users, currentUserId }: { users: U[]; curre
                 <td className="px-4 py-2">{u.email}</td>
                 <td className="px-4 py-2">{u.full_name || "-"}</td>
                 <td className="px-4 py-2">
-                  <span className={`text-xs px-2 py-0.5 rounded-full ${
-                    u.role === "admin" ? "bg-purple-100 text-purple-700" :
-                    u.role === "viewer" ? "bg-teal-100 text-teal-700" :
-                    "bg-slate-100 text-slate-700"
-                  }`}>
-                    {u.role === "admin" ? "Admin" : u.role === "viewer" ? "Xem tất cả" : "Nhân viên"}
-                  </span>
+                  <select value={u.role} disabled={u.id === currentUserId}
+                    title={u.id === currentUserId ? "Không thể đổi vai trò của chính bạn" : "Đổi vai trò"}
+                    onChange={(e) => {
+                      const newRole = e.target.value;
+                      if (newRole === u.role) return;
+                      if (!confirm(`Đổi vai trò của ${u.email} thành "${newRole === "admin" ? "Admin" : newRole === "viewer" ? "Xem tất cả" : "Nhân viên"}"?`)) return;
+                      start(async () => {
+                        const res = await updateStaffRole(u.id, newRole);
+                        if ("error" in res) setMsg({ type: "err", text: res.error as string });
+                        else setMsg({ type: "ok", text: "Đã đổi vai trò" });
+                      });
+                    }}
+                    className={`text-xs px-2 py-1 rounded border bg-white disabled:opacity-60 ${
+                      u.role === "admin" ? "text-purple-700 border-purple-200" :
+                      u.role === "viewer" ? "text-teal-700 border-teal-200" :
+                      "text-slate-700 border-slate-200"
+                    }`}>
+                    <option value="staff">Nhân viên</option>
+                    <option value="viewer">Xem tất cả</option>
+                    <option value="admin">Admin</option>
+                  </select>
                 </td>
                 <td className="px-4 py-2 text-slate-600">{u.created_at_display}</td>
                 <td className="px-4 py-2 text-right space-x-2">
