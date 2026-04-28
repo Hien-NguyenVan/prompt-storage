@@ -28,6 +28,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
           <nav className="flex-1 flex items-center gap-2 sm:gap-4 text-sm overflow-x-auto scrollbar-hide">
             <Link href="/" className="hover:text-brand-600 shrink-0">Danh sách</Link>
             <Link href="/sets/new" className="hover:text-brand-600 shrink-0">Tạo bộ</Link>
+            <Link href="/tools" className="hover:text-brand-600 shrink-0">Tools</Link>
             {isAdmin && <Link href="/admin/users" className="hover:text-brand-600 shrink-0">Nhân viên</Link>}
           </nav>
           <div className="text-sm text-slate-600 flex items-center gap-2 shrink-0">
